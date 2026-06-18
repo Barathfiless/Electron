@@ -139,7 +139,20 @@
           </div>
           
           <!-- Interactive physical power button on Right side -->
-          <div class="phone-physical-button power-btn" id="bezel-power-button" title="Power / Lock Screen"></div>
+          <div class="phone-physical-button power-btn" id="bezel-power-button">
+            <!-- Floating popover with power actions -->
+            <div class="power-popover" id="power-control-popover">
+              <button class="power-pop-btn sleep" id="power-pop-sleep" title="Sleep / Lock">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              </button>
+              <button class="power-pop-btn restart" id="power-pop-restart" title="Restart System">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              </button>
+              <button class="power-pop-btn shutdown" id="power-pop-shutdown" title="Power Off">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+              </button>
+            </div>
+          </div>
 
           <!-- Dynamic Notch/Punch hole -->
           <div class="smartphone-camera-punch"></div>
@@ -149,6 +162,14 @@
           <!-- SCREEN CONTENT -->
           <div class="smartphone-screen" id="phone-screen-container">
             
+            <!-- DYNAMIC SCREEN STATE OVERLAY (For Booting/Shutting Down) -->
+            <div class="phone-state-overlay" id="phone-state-overlay">
+              <div class="state-overlay-content">
+                <div class="state-spinner" id="state-spinner"></div>
+                <p id="state-overlay-text">Shutting down...</p>
+              </div>
+            </div>
+
             <!-- DYNAMIC VOLUME HUD -->
             <div class="phone-volume-hud" id="phone-volume-hud">
               <div class="volume-hud-bar">

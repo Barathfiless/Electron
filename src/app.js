@@ -984,19 +984,157 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (bezelPowerBtn) {
-    bezelPowerBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      isLocked = !isLocked;
-      if (isLocked) {
-        phoneScreenContainer.style.filter = 'brightness(0)';
-        phoneScreenContainer.style.pointerEvents = 'none';
-        bezelPowerBtn.title = "Unlock Screen";
-      } else {
+  // Select power buttons and overlay elements
+  const powerPopSleep = document.getElementById('power-pop-sleep');
+  const powerPopRestart = document.getElementById('power-pop-restart');
+  const powerPopShutdown = document.getElementById('power-pop-shutdown');
+  const phoneStateOverlay = document.getElementById('phone-state-overlay');
+  const stateSpinner = document.getElementById('state-spinner');
+  const stateOverlayText = document.getElementById('state-overlay-text');
+
+  let isPhonePoweredOff = false;
+
+  function toggleSleep() {
+    if (isPhonePoweredOff) return; // Cannot sleep if powered off
+
+    isLocked = !isLocked;
+    if (isLocked) {
+      phoneScreenContainer.style.filter = 'brightness(0)';
+      phoneScreenContainer.style.pointerEvents = 'none';
+      if (bezelPowerBtn) bezelPowerBtn.title = "Unlock Screen";
+    } else {
+      phoneScreenContainer.style.filter = '';
+      phoneScreenContainer.style.pointerEvents = '';
+      if (bezelPowerBtn) bezelPowerBtn.title = "Power / Lock Screen";
+    }
+  }
+
+  function handlePowerOff() {
+    isPhonePoweredOff = true;
+    
+    // Show Shutdown screen overlay
+    if (phoneStateOverlay) {
+      if (stateSpinner) stateSpinner.style.display = 'block';
+      if (stateOverlayText) stateOverlayText.textContent = 'Shutting down...';
+      phoneStateOverlay.classList.add('visible');
+    }
+
+    // Force disconnect WebRTC connection since phone is powered off
+    if (activeConnection) {
+      console.log('Power off: closing active connection...');
+      activeConnection.send({ type: 'disconnect' });
+      setTimeout(() => {
+        activeConnection.close();
+      }, 100);
+    }
+
+    // After 2 seconds, remove the spinner and leave the screen black
+    setTimeout(() => {
+      if (stateSpinner) stateSpinner.style.display = 'none';
+      if (stateOverlayText) stateOverlayText.textContent = '';
+    }, 2000);
+  }
+
+  function handleBootOrWake() {
+    if (isPhonePoweredOff) {
+      // Boot sequence
+      isPhonePoweredOff = false;
+      isLocked = false;
+      
+      if (phoneStateOverlay) {
+        if (stateSpinner) stateSpinner.style.display = 'none';
+        if (stateOverlayText) {
+          stateOverlayText.innerHTML = '<span style="font-size: 16px; font-weight: 800; letter-spacing: 1.5px; color: #ffffff;">ELECTRON</span>';
+        }
+        phoneStateOverlay.classList.add('visible');
+      }
+
+      // After 2.5 seconds, remove the boot screen overlay
+      setTimeout(() => {
+        if (phoneStateOverlay) phoneStateOverlay.classList.remove('visible');
         phoneScreenContainer.style.filter = '';
         phoneScreenContainer.style.pointerEvents = '';
-        bezelPowerBtn.title = "Power / Lock Screen";
+        
+        // Re-initialize local Peer connection if we shut it down
+        console.log('Re-initializing peer client on phone boot...');
+        if (peer) {
+          peer.destroy();
+        }
+        initPeerJS();
+      }, 2500);
+    } else {
+      // Simple sleep/wake toggle
+      toggleSleep();
+    }
+  }
+
+  function handleRestart() {
+    if (isPhonePoweredOff) return; // Cannot restart if powered off
+
+    // Show Restart screen overlay
+    if (phoneStateOverlay) {
+      if (stateSpinner) stateSpinner.style.display = 'block';
+      if (stateOverlayText) stateOverlayText.textContent = 'Restarting...';
+      phoneStateOverlay.classList.add('visible');
+    }
+
+    // Clean active connections
+    if (activeConnection) {
+      activeConnection.close();
+    }
+
+    // After 2.5 seconds, show ELECTRON boot logo
+    setTimeout(() => {
+      if (stateSpinner) stateSpinner.style.display = 'none';
+      if (stateOverlayText) {
+        stateOverlayText.innerHTML = '<span style="font-size: 16px; font-weight: 800; letter-spacing: 1.5px; color: #ffffff;">ELECTRON</span>';
       }
+      
+      // After another 2 seconds, complete boot
+      setTimeout(() => {
+        if (phoneStateOverlay) phoneStateOverlay.classList.remove('visible');
+        phoneScreenContainer.style.filter = '';
+        phoneScreenContainer.style.pointerEvents = '';
+        isLocked = false;
+
+        // Restart broker connection
+        if (peer) {
+          peer.destroy();
+        }
+        initPeerJS();
+      }, 2000);
+    }, 2500);
+  }
+
+  // Physical power button click behaves as Sleep/Wake, or Boot if powered off
+  if (bezelPowerBtn) {
+    bezelPowerBtn.addEventListener('click', (e) => {
+      // Make sure we clicked on the button itself and not its popover children
+      if (e.target === bezelPowerBtn) {
+        e.stopPropagation();
+        handleBootOrWake();
+      }
+    });
+  }
+
+  if (powerPopSleep) {
+    powerPopSleep.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSleep();
+    });
+  }
+
+  if (powerPopRestart) {
+    powerPopRestart.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleRestart();
+    });
+  }
+
+  if (powerPopShutdown) {
+    powerPopShutdown.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handlePowerOff();
     });
   }
 

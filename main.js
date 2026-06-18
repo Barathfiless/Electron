@@ -53,9 +53,9 @@ function createWindow() {
   Menu.setApplicationMenu(null); // Disable default menu and shortcut bindings like Ctrl+R
 
   mainWindow = new BrowserWindow({
-    width: 380,
+    width: 430,
     height: 740,
-    minWidth: 350,
+    minWidth: 400,
     minHeight: 700,
     frame: false, // Frameless window for premium, custom custom window controls
     transparent: true,
@@ -157,7 +157,7 @@ ipcMain.on('set-orientation', (event, orientation) => {
     mainWindow.setMinimumSize(650, 350);
     mainWindow.setSize(700, 390, true);
   } else {
-    mainWindow.setMinimumSize(350, 700);
-    mainWindow.setSize(380, 740, true);
+    mainWindow.setMinimumSize(400, 700);
+    mainWindow.setSize(430, 740, true);
   }
 });
