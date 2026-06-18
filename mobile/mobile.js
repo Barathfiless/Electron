@@ -209,6 +209,13 @@ document.addEventListener('DOMContentLoaded', () => {
           isManuallyDisconnected = true;
           dataConnection.close();
           break;
+
+        case 'volume-change':
+          console.log(`PC requested volume change to ${data.level}%`);
+          if (navigator.vibrate) {
+            navigator.vibrate(50);
+          }
+          break;
           
         default:
           console.log('Unrecognized data packet arrived from PC:', data);

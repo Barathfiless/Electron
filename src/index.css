@@ -383,34 +383,181 @@ body {
   z-index: 100;
 }
 
-/* Physical Volume Buttons on Left Side */
-.smartphone-bezel::before {
-  content: '';
+/* Interactive physical buttons replacing pseudo-elements */
+.phone-physical-button {
   position: absolute;
-  left: -11px;
-  top: 110px;
   width: 3px;
-  height: 65px;
-  background: linear-gradient(to bottom, #3f3f46 0%, #18181b 45%, transparent 45%, transparent 55%, #3f3f46 55%, #18181b 100%);
+  background: #3f3f46;
   border: 1px solid #09090b;
-  border-right: none;
-  border-radius: 3px 0 0 3px;
-  z-index: -1;
+  z-index: 1000;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Physical Power Button on Right Side */
-.smartphone-bezel::after {
-  content: '';
-  position: absolute;
+.phone-physical-button.volume-rocker {
+  left: -11px;
+  top: 110px;
+  height: 65px;
+  background: linear-gradient(to bottom, #3f3f46 0%, #18181b 45%, transparent 45%, transparent 55%, #3f3f46 55%, #18181b 100%);
+  border-right: none;
+  border-radius: 3px 0 0 3px;
+}
+
+.phone-physical-button.volume-rocker:hover {
+  left: -13px;
+  width: 5px;
+  background: linear-gradient(to bottom, #52525b 0%, #27272a 45%, transparent 45%, transparent 55%, #52525b 55%, #27272a 100%);
+}
+
+.phone-physical-button.power-btn {
   right: -11px;
   top: 140px;
-  width: 3px;
   height: 42px;
   background: linear-gradient(to bottom, #3f3f46 0%, #18181b 100%);
-  border: 1px solid #09090b;
   border-left: none;
   border-radius: 0 3px 3px 0;
-  z-index: -1;
+}
+
+.phone-physical-button.power-btn:hover {
+  right: -13px;
+  width: 5px;
+  background: linear-gradient(to bottom, #52525b 0%, #27272a 100%);
+}
+
+/* Floating volume controller popover (slides out to the left) */
+.volume-popover {
+  position: absolute;
+  left: -42px; /* project to the left */
+  top: -30px; /* center relative to the 65px tall rocker */
+  width: 34px;
+  background: rgba(10, 10, 10, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 6px 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(8px) scale(0.92);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  z-index: 1005;
+  backdrop-filter: blur(8px);
+}
+
+.phone-physical-button.volume-rocker:hover .volume-popover,
+.volume-popover:hover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+.volume-pop-btn {
+  background: transparent;
+  border: none;
+  color: #a1a1aa;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+  padding: 0;
+}
+
+.volume-pop-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+.volume-pop-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.volume-pop-slider-container {
+  height: 50px;
+  width: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+.volume-pop-slider-bar {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.volume-pop-slider-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 2px;
+  transition: height 0.1s ease;
+}
+
+/* Dynamic Volume Screen HUD (mimics native Android/iOS slider) */
+.phone-volume-hud {
+  position: absolute;
+  left: 12px;
+  top: 120px;
+  width: 24px;
+  height: 110px;
+  background: rgba(15, 15, 15, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  opacity: 0;
+  transform: translateX(-12px) scale(0.92);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1200;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.phone-volume-hud.visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.volume-hud-bar {
+  width: 4px;
+  height: 65px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.volume-hud-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 2px;
+  transition: height 0.1s ease;
+}
+
+.volume-hud-icon {
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
 }
 
 .smartphone-bezel:hover {

@@ -916,6 +916,91 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
+  // PHYSICAL PHONE BEZEL VOLUME & POWER INTERACTIVE CONTROLS
+  // ==========================================================================
+  const volumePopUp = document.getElementById('volume-pop-up');
+  const volumePopDown = document.getElementById('volume-pop-down');
+  const volumePopFill = document.getElementById('volume-pop-fill');
+  const phoneVolumeHud = document.getElementById('phone-volume-hud');
+  const volumeHudFill = document.getElementById('volume-hud-fill');
+  const volumeHudSvg = document.getElementById('volume-hud-svg');
+  const bezelPowerBtn = document.getElementById('bezel-power-button');
+  
+  let volumeLevel = 60; // Default volume level percentage
+  let hudTimeout = null;
+  let isLocked = false;
+
+  function updateVolume(newLevel) {
+    volumeLevel = Math.max(0, Math.min(100, newLevel));
+    
+    // Update popover slider and screen HUD fills
+    if (volumePopFill) volumePopFill.style.height = `${volumeLevel}%`;
+    if (volumeHudFill) volumeHudFill.style.height = `${volumeLevel}%`;
+
+    // Update SVG icon dynamically based on percentage
+    if (volumeHudSvg) {
+      if (volumeLevel === 0) {
+        // Mute icon
+        volumeHudSvg.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>`;
+      } else if (volumeLevel < 50) {
+        // Low volume waves
+        volumeHudSvg.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+      } else {
+        // High volume waves
+        volumeHudSvg.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+      }
+    }
+
+    // Toggle HUD visibility
+    if (phoneVolumeHud) {
+      phoneVolumeHud.classList.add('visible');
+      
+      if (hudTimeout) clearTimeout(hudTimeout);
+      hudTimeout = setTimeout(() => {
+        phoneVolumeHud.classList.remove('visible');
+      }, 2000);
+    }
+
+    // Sync volume change with mobile phone companion via WebRTC
+    if (activeConnection) {
+      activeConnection.send({
+        type: 'volume-change',
+        level: volumeLevel
+      });
+    }
+  }
+
+  if (volumePopUp) {
+    volumePopUp.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent bezel click triggers
+      updateVolume(volumeLevel + 10);
+    });
+  }
+
+  if (volumePopDown) {
+    volumePopDown.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent bezel click triggers
+      updateVolume(volumeLevel - 10);
+    });
+  }
+
+  if (bezelPowerBtn) {
+    bezelPowerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isLocked = !isLocked;
+      if (isLocked) {
+        phoneScreenContainer.style.filter = 'brightness(0)';
+        phoneScreenContainer.style.pointerEvents = 'none';
+        bezelPowerBtn.title = "Unlock Screen";
+      } else {
+        phoneScreenContainer.style.filter = '';
+        phoneScreenContainer.style.pointerEvents = '';
+        bezelPowerBtn.title = "Power / Lock Screen";
+      }
+    });
+  }
+
+  // ==========================================================================
   // INITIALIZATION TRIGGER
   // ==========================================================================
   initPeerJS();
