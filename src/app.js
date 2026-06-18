@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const qrCodeImg = document.getElementById('qr-code-img');
   const pcPeerIdLabel = document.getElementById('pc-peer-id');
   const btnOpenDemoMobile = document.getElementById('btn-open-demo-mobile');
+  const btnDisconnectDevice = document.getElementById('btn-disconnect-device');
   
   // Phone screens and navbar
   const viewPairing = document.getElementById('view-pairing');
@@ -165,11 +166,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-
   if (btnAppRefresh) {
     btnAppRefresh.addEventListener('click', () => {
       // Reload renderer process
       window.location.reload();
+    });
+  }
+
+  if (btnDisconnectDevice) {
+    btnDisconnectDevice.addEventListener('click', () => {
+      if (activeConnection) {
+        console.log('Manually closing P2P connection to mobile...');
+        activeConnection.send({ type: 'disconnect' });
+        setTimeout(() => {
+          activeConnection.close();
+        }, 100);
+      }
     });
   }
 
@@ -406,6 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showScreenView('view-virtual-launcher');
       phoneStatusBar.style.display = 'flex';
       phoneNavBar.style.display = 'flex';
+      if (btnDisconnectDevice) btnDisconnectDevice.style.display = 'inline-flex';
       
       // Trigger a desktop notification using native APIs
       new Notification('Electron Connected', {
@@ -450,6 +463,11 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log('Mobile triggered camera/screen stream shutdown.');
           cleanupMediaStreams();
           break;
+
+        case 'disconnect':
+          console.log('Mobile triggered manual disconnection.');
+          activeConnection.close();
+          break;
           
         default:
           console.log('Unknown P2P Data Packet arrived:', data);
@@ -480,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showScreenView('view-pairing');
     phoneStatusBar.style.display = 'none';
     phoneNavBar.style.display = 'none';
+    if (btnDisconnectDevice) btnDisconnectDevice.style.display = 'none';
     
     cleanupMediaStreams();
     switchTab('dashboard');

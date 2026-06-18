@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const badgeText = document.getElementById('badge-text');
   const pairTargetIdLabel = document.getElementById('pair-target-id');
   const helperText = document.getElementById('helper-text');
+  const btnDisconnectMobile = document.getElementById('btn-disconnect-mobile');
   
   // Guidance Tap pointers
   const tapOverlay = document.getElementById('tap-overlay');
@@ -73,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isCameraStreaming = false;
   let cameraFacingMode = 'environment'; // Rear camera lens default on mobile
   let batteryObj = null;
+  let isManuallyDisconnected = false;
 
   // ==========================================================================
   // MOBILE PEERJS CLIENT & CONNECTION HANDSHAKES
@@ -156,6 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
           // Remote Click Guide coordinates packet arrived!
           triggerTouchGuidancePointer(data.x, data.y);
           break;
+
+        case 'disconnect':
+          console.log('PC triggered manual disconnection.');
+          isManuallyDisconnected = true;
+          dataConnection.close();
+          break;
           
         default:
           console.log('Unrecognized data packet arrived from PC:', data);
@@ -163,9 +171,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     conn.on('close', () => {
-      console.warn('P2P Data Channel closed. Attempting reconnect in 4 seconds...');
+      console.warn('P2P Data Channel closed.');
       handlePCDisconnection();
-      setTimeout(connectToPC, 4000);
+      if (!isManuallyDisconnected) {
+        console.warn('Attempting reconnect in 4 seconds...');
+        setTimeout(connectToPC, 4000);
+      } else {
+        console.log('Skipping auto-reconnect due to manual disconnection.');
+        viewLanding.style.display = 'flex';
+        if (btnOpenScanner) btnOpenScanner.style.display = 'block';
+        if (qrScannerContainer) qrScannerContainer.style.display = 'none';
+        isManuallyDisconnected = false;
+      }
     });
 
     conn.on('error', (err) => {
@@ -188,12 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
       badgeText.textContent = customText || 'Connected';
       helperText.textContent = 'Syncing system stats, SMS chats, and media gallery live with PC.';
       helperText.style.color = '#A0AEC0';
+      if (btnDisconnectMobile) btnDisconnectMobile.style.display = 'block';
     } else {
       connBadge.className = 'conn-status-badge disconnected';
       badgeGlow.className = 'pulse-dot red';
       badgeText.textContent = customText || 'Disconnected';
       helperText.textContent = 'Establishing direct secure P2P channels. Please wait.';
       helperText.style.color = 'var(--accent-red)';
+      if (btnDisconnectMobile) btnDisconnectMobile.style.display = 'none';
     }
   }
 
@@ -528,6 +547,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     alert('Simulated SMS packet dispatched to PC Hub!');
   });
+
+  if (btnDisconnectMobile) {
+    btnDisconnectMobile.addEventListener('click', () => {
+      if (dataConnection) {
+        console.log('Manually disconnecting from PC...');
+        isManuallyDisconnected = true;
+        dataConnection.send({ type: 'disconnect' });
+        setTimeout(() => {
+          dataConnection.close();
+        }, 100);
+      }
+    });
+  }
 
   // Handle messages written on the PC app that arrive back on the phone companion
   function handlePCMessageReply(text) {
