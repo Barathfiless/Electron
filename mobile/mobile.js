@@ -39,23 +39,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. RETRIEVE PC PAIR TARGET ID FROM URL PARAMETERS
   const urlParams = new URLSearchParams(window.location.search);
-  const targetPeerId = urlParams.get('peerId');
+  let targetPeerId = urlParams.get('peerId');
   
-  if (!targetPeerId) {
-    pairTargetIdLabel.textContent = 'No target PC Peer ID found!';
-    helperText.textContent = 'Please scan a valid pairing QR code from the PC App, or add "?peerId=YOUR_PEER_ID" to the URL path.';
-    return;
-  }
-  
-  pairTargetIdLabel.textContent = targetPeerId;
-
-  // Get Modal elements
+  // Get DOM elements for modal and landing screens
   const connectModal = document.getElementById('connect-modal');
   const btnAllowConnect = document.getElementById('btn-allow-connect');
   const btnDenyConnect = document.getElementById('btn-deny-connect');
   const deniedScreen = document.getElementById('denied-screen');
+  
+  const viewLanding = document.getElementById('view-landing');
+  const btnOpenScanner = document.getElementById('btn-open-scanner');
+  const btnConnectManual = document.getElementById('btn-connect-manual');
+  const inputPeerCode = document.getElementById('input-peer-code');
+  const qrScannerContainer = document.getElementById('qr-scanner-container');
 
   let pendingStream = null;
+  let html5QrCodeInstance = null;
+
+  function showConnectionPrompt(peerId) {
+    targetPeerId = peerId;
+    pairTargetIdLabel.textContent = targetPeerId;
+    connectModal.style.display = 'flex';
+  }
 
 
   // 3. SYSTEM STATE VARIABLES
@@ -617,41 +622,107 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   // INITIALIZATION TRIGGER (Deferred to User Confirmation Modal)
   // ==========================================================================
+  
+  // Connect button listeners unconditionally
+  btnAllowConnect.addEventListener('click', async () => {
+    connectModal.style.display = 'none';
+
+    // Capture stream synchronously inside the click handler to satisfy browser gesture requirements
+    try {
+      console.log('Attempting auto screen stream capture...');
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          displaySurface: 'monitor',
+          logicalSurface: true
+        },
+        audio: false
+      });
+      pendingStream = stream;
+      activeMediaStream = stream;
+      isScreenStreaming = true;
+
+      btnToggleScreen.innerHTML = 'Stop Android Screen Share';
+      btnToggleScreen.className = 'btn btn-secondary';
+      streamStatusText.textContent = 'Android Screen mirrored to PC';
+      streamFeedback.style.display = 'flex';
+    } catch (err) {
+      console.warn('Screen capture permission was declined by user or is unsupported:', err);
+    }
+
+    initMobilePeer();
+  });
+
+  btnDenyConnect.addEventListener('click', () => {
+    connectModal.style.display = 'none';
+    deniedScreen.style.display = 'flex';
+    console.log('User denied the connection request.');
+  });
+
+  // Initialization Routing
   if (targetPeerId) {
-    connectModal.style.display = 'flex';
+    showConnectionPrompt(targetPeerId);
+  } else {
+    // Show landing screen
+    viewLanding.style.display = 'flex';
 
-    btnAllowConnect.addEventListener('click', async () => {
-      connectModal.style.display = 'none';
-
-      // Capture stream synchronously inside the click handler to satisfy browser gesture requirements
-      try {
-        console.log('Attempting auto screen stream capture...');
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: {
-            displaySurface: 'monitor',
-            logicalSurface: true
-          },
-          audio: false
-        });
-        pendingStream = stream;
-        activeMediaStream = stream;
-        isScreenStreaming = true;
-
-        btnToggleScreen.innerHTML = 'Stop Android Screen Share';
-        btnToggleScreen.className = 'btn btn-secondary';
-        streamStatusText.textContent = 'Android Screen mirrored to PC';
-        streamFeedback.style.display = 'flex';
-      } catch (err) {
-        console.warn('Screen capture permission was declined by user or is unsupported:', err);
+    // Manual Connection click trigger
+    btnConnectManual.addEventListener('click', () => {
+      const code = inputPeerCode.value.trim();
+      if (!code) {
+        alert('Please enter a valid PC pairing code.');
+        return;
       }
-
-      initMobilePeer();
+      viewLanding.style.display = 'none';
+      showConnectionPrompt(code);
     });
 
-    btnDenyConnect.addEventListener('click', () => {
-      connectModal.style.display = 'none';
-      deniedScreen.style.display = 'flex';
-      console.log('User denied the connection request.');
+    // In-app Camera QR Scanner click trigger
+    btnOpenScanner.addEventListener('click', () => {
+      btnOpenScanner.style.display = 'none';
+      qrScannerContainer.style.display = 'block';
+
+      // Initialize html5-qrcode
+      html5QrCodeInstance = new Html5Qrcode("qr-reader");
+
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+      html5QrCodeInstance.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+          console.log(`Successfully scanned QR Code: ${decodedText}`);
+          
+          // Stop scanning
+          html5QrCodeInstance.stop().then(() => {
+            qrScannerContainer.style.display = 'none';
+            viewLanding.style.display = 'none';
+
+            // Extract peerId from QR URL
+            let scannedId = decodedText;
+            if (decodedText.includes('peerId=')) {
+              const urlMatch = decodedText.match(/peerId=([^&]+)/);
+              if (urlMatch) {
+                scannedId = urlMatch[1];
+              }
+            }
+            
+            showConnectionPrompt(scannedId);
+          }).catch((err) => {
+            console.error("Failed to clean up scanner:", err);
+            qrScannerContainer.style.display = 'none';
+            viewLanding.style.display = 'none';
+            showConnectionPrompt(decodedText);
+          });
+        },
+        (errorMessage) => {
+          // Frame scanner callback
+        }
+      ).catch((err) => {
+        console.error("Camera scanner start failed:", err);
+        alert("Unable to open camera. Please grant camera access permissions.");
+        btnOpenScanner.style.display = 'block';
+        qrScannerContainer.style.display = 'none';
+      });
     });
   }
 });
