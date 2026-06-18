@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Electron Mobile Companion</title>
+  <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+  <link rel="stylesheet" href="mobile.css">
+  <!-- Stable PeerJS library CDN -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- HTML5 QR Code Scanner library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+
+  <!-- Fullscreen Standalone Landing Screen -->
+  <div class="connect-modal-overlay" id="view-landing" style="display: none;">
+    <div class="connect-modal-card landing-card">
+      <div class="connect-modal-icon">
+        <svg viewBox="0 0 24 24" width="40" height="40" stroke="var(--accent-indigo)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          <path d="M17 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"></path>
+        </svg>
+      </div>
+      <h2>Electron Mobile Companion</h2>
+      <p>Connect your mobile device to your PC companion to sync files, diagnostics, and mirror screens.</p>
+      
+      <!-- Built-in Camera QR Scanner view -->
+      <div id="qr-scanner-container" style="display: none; width: 100%; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #222;">
+        <div id="qr-reader" style="width: 100%;"></div>
+      </div>
+
+      <div class="btn-group-vertical" style="width: 100%; gap: 12px;">
+        <button class="btn btn-primary" id="btn-open-scanner" style="width: 100%; padding: 12px; font-weight: 600; border-radius: 10px;">
+          Scan PC QR Code
+        </button>
+        
+        <div class="divider" style="color: var(--text-dark); font-size: 11px; font-weight: 700; margin: 6px 0; text-transform: uppercase; letter-spacing: 1px; text-align: center;">OR</div>
+        
+        <div class="input-group" style="text-align: left; margin-bottom: 12px; width: 100%;">
+          <label for="input-peer-code" style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">Enter Pairing Code</label>
+          <input type="text" id="input-peer-code" placeholder="e.g. electron-pc-t59zt5" style="width: 100%; background: #000000; border: 1px solid #333333; border-radius: 8px; padding: 12px 14px; color: white; font-size: 14px; outline: none; font-family: var(--font-mono); text-align: center;">
+        </div>
+        
+        <button class="btn btn-secondary" id="btn-connect-manual" style="width: 100%; padding: 12px; font-weight: 600; border-radius: 10px;">
+          Connect Manually
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="logo-group">
+      <div class="logo-dot"></div>
+      <h1>ELECTRON</h1>
+      <span class="badge">MOBILE</span>
+    </div>
+    <div class="conn-status-badge disconnected" id="conn-badge">
+      <span class="pulse-dot red" id="badge-glow"></span>
+      <span id="badge-text">Disconnected</span>
+    </div>
+  </header>
+
+  <!-- Interactive Coordinate Tap Overlay (Fires when remote clicks PC mirror) -->
+  <div class="remote-tap-overlay" id="tap-overlay">
+    <div class="tap-pointer" id="tap-pointer"></div>
+    <div class="tap-ripple" id="tap-ripple"></div>
+  </div>
+
+  <main class="main-content">
+    
+    <!-- Pairing Details -->
+    <section class="card glass status-section">
+      <div class="status-row">
+        <span class="label">P2P Pair Target:</span>
+        <span class="status-value font-mono" id="pair-target-id">Connecting...</span>
+      </div>
+      <div class="status-row desc-row">
+        <p id="helper-text">Establish connection by scanning the PC QR code. Reconnecting if disconnected.</p>
+      </div>
+    </section>
+
+    <!-- Mirror & Media Broadcasters -->
+    <section class="card glass">
+      <h2>Media Streaming</h2>
+      <p class="section-desc">Stream raw system screens or front/back camera tracks to your PC.</p>
+      
+      <div class="btn-group-vertical">
+        <!-- Screen Stream Toggle -->
+        <button class="btn btn-primary" id="btn-toggle-screen" disabled>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" style="margin-right:8px;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+          Share Android Screen
+        </button>
+        
+        <!-- Camera Stream Toggle -->
+        <div class="camera-stream-control">
+          <button class="btn btn-secondary" id="btn-toggle-camera" disabled>
+            Stream Camera Feed
+          </button>
+          <button class="btn btn-secondary" id="btn-flip-camera" disabled title="Flip Camera" style="width: auto; flex: 0 0 auto; padding: 0 12px;">
+            Flip
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Mobile Viewport status -->
+      <div class="stream-feedback" id="stream-feedback" style="display: none;">
+        <span class="pill pulse">LIVE STREAMING</span>
+        <span id="stream-status-text">Android Screen mirrored to PC</span>
+      </div>
+    </section>
+
+    <!-- File and Gallery Syncer -->
+    <section class="card glass">
+      <h2>Gallery Photo Syncer</h2>
+      <p class="section-desc">Upload photos directly into your Electron PC photo manager.</p>
+      
+      <div class="gallery-sync-box">
+        <!-- Hidden input uploader -->
+        <input type="file" id="photo-upload-input" accept="image/*" multiple style="display: none;">
+        
+        <button class="btn btn-secondary" id="btn-select-photos" disabled>
+          Select & Sync Photos
+        </button>
+      </div>
+      
+      <div class="upload-progress-list" id="upload-progress-list">
+        <!-- Dyn pop -->
+      </div>
+    </section>
+
+    <!-- SMS Messenger Simulation -->
+    <section class="card glass">
+      <h2>Simulate SMS Capture</h2>
+      <p class="section-desc">Send simulated incoming text messages to test real-time SMS capture and keyboard replies.</p>
+      
+      <div class="sms-composer-box">
+        <div class="input-group">
+          <label for="sms-sender">Contact Name</label>
+          <input type="text" id="sms-sender" value="Alexa (Mobile Sync)">
+        </div>
+        <div class="input-group">
+          <label for="sms-message">Text Message</label>
+          <textarea id="sms-message" rows="2" placeholder="Write message to send to PC app..."></textarea>
+        </div>
+        <button class="btn btn-accent" id="btn-send-sms" disabled>
+          Send SMS to PC
+        </button>
+      </div>
+    </section>
+
+    <!-- Device Info Diagnostics -->
+    <section class="card glass">
+      <h2>System Diagnostics</h2>
+      <p class="section-desc">Real-time mobile status logs synced automatically with your desktop.</p>
+      
+      <div class="diagnostics-grid">
+        <div class="diag-item">
+          <span class="lbl">Battery</span>
+          <span class="val" id="diag-battery">--%</span>
+        </div>
+        <div class="diag-item">
+          <span class="lbl">Power State</span>
+          <span class="val" id="diag-power">Checking...</span>
+        </div>
+        <div class="diag-item">
+          <span class="lbl">Wi-Fi Signal</span>
+          <span class="val" id="diag-signal">Optimal</span>
+        </div>
+        <div class="diag-item">
+          <span class="lbl">Operating OS</span>
+          <span class="val">Android 14</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>Electron Control System &bull; Direct Peer Sync</p>
+  </footer>
+
+  <!-- Fullscreen Connection Request Modal -->
+  <div class="connect-modal-overlay" id="connect-modal" style="display: none;">
+    <div class="connect-modal-card">
+      <div class="connect-modal-icon">
+        <svg viewBox="0 0 24 24" width="40" height="40" stroke="var(--accent-indigo)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          <path d="M17 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-3"></path>
+        </svg>
+      </div>
+      <h2>Connect with Electron?</h2>
+      <p>This will establish a direct secure P2P connection to your PC. It allows remote screen mirroring, diagnostics, and keyboard input integration.</p>
+      <div class="connect-modal-actions">
+        <button class="btn btn-secondary" id="btn-deny-connect">Deny</button>
+        <button class="btn btn-primary" id="btn-allow-connect">Allow</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Denied Screen State -->
+  <div class="connect-denied-screen" id="denied-screen" style="display: none;">
+    <div class="denied-content">
+      <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--accent-red)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+      <h2>Connection Denied</h2>
+      <p>You have declined the connection request. You can safely close this browser window.</p>
+    </div>
+  </div>
+
+  <script src="mobile.js"></script>
+</body>
+</html>

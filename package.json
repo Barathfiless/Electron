@@ -1,0 +1,19 @@
+{
+  "name": "electron-mobile-control",
+  "version": "1.0.0",
+  "description": "Access, mirror, and control an Android phone from a PC using WebRTC P2P",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "peer": "^1.0.2",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "electron": "^30.0.1"
+  },
+  "author": "Antigravity",
+  "license": "MIT"
+}

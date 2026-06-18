@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electron Mobile Suite</title>
+  <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+  <!-- Load PeerJS library from stable CDN -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+  <!-- Frameless Titlebar is relocated inline inside the phone display section -->
+
+  <!-- Horizontal Top Navigation Header -->
+  <nav class="top-nav">
+    <div class="nav-menu">
+      <button class="nav-item active" data-tab="dashboard" id="nav-btn-dashboard" title="Dashboard">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-tab="mirror" id="nav-btn-mirror" title="Live Mirror">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+        <span>Live Mirror</span>
+      </button>
+      <button class="nav-item" data-tab="camera" id="nav-btn-camera" title="Remote Camera">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <span>Camera</span>
+      </button>
+      <button class="nav-item" data-tab="gallery" id="nav-btn-gallery" title="Media Gallery">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <span>Gallery</span>
+      </button>
+      <button class="nav-item" data-tab="messages" id="nav-btn-messages" title="Messaging Hub">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span>Messages</span>
+      </button>
+      <button class="nav-item" data-tab="settings" id="nav-btn-settings" title="Settings">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.5 1z"></path></svg>
+        <span>Settings</span>
+      </button>
+    </div>
+    <div class="top-controls">
+      <!-- Theme Toggle Button relocated to Titlebar -->
+      <!-- Refresh Button -->
+      <button class="top-btn" id="btn-app-refresh" title="Reload Connection & Interface">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+      </button>
+      
+      <div class="sidebar-device-card" id="sidebar-device-card">
+        <div class="device-card-pulse-wrapper">
+          <div class="pulse-dot red" id="status-glow"></div>
+        </div>
+        <div class="device-card-details">
+          <span class="device-card-name" id="sidebar-device-name">Mobile Device</span>
+          <span class="device-card-status" id="connection-status-text">(Offline)</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Workspace -->
+  <main class="workspace">
+    
+    <!-- Content Area Split -->
+    <section class="content-container">
+      
+      <!-- LEFT: SMARTPHONE DISPLAY MOCKUP -->
+      <div class="phone-display-section">
+        <!-- Custom Frameless Titlebar centered on top of phone bezel -->
+        <header class="titlebar" id="app-titlebar">
+          <div class="titlebar-logo">
+            <span>ELECTRON</span>
+          </div>
+          <div class="titlebar-drag-region"></div>
+          <div class="titlebar-controls">
+            <button class="control-btn theme" id="btn-theme-toggle" title="Toggle Light/Dark Mode">
+              <!-- Moon icon (dark mode icon shown by default, click switches to light) -->
+              <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+              <!-- Sun icon (light mode icon hidden by default, click switches to dark) -->
+              <svg id="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            </button>
+            <button class="control-btn rotate" id="btn-rotate-phone" title="Rotate Phone">
+              <!-- Distinct smartphone rotation icon -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="7" width="14" height="10" rx="1.5" transform="rotate(-30 12 12)" />
+                <path d="M12 2A10 10 0 0 1 22 12" />
+                <polyline points="22 8 22 12 18 12" />
+                <path d="M12 22A10 10 0 0 1 2 12" />
+                <polyline points="2 16 2 12 6 12" />
+              </svg>
+            </button>
+            <button class="control-btn minimize" id="win-minimize" title="Minimize">
+              <svg viewBox="0 0 10 1"><rect fill="currentColor" x="0" y="0" width="10" height="1"/></svg>
+            </button>
+            <button class="control-btn maximize" id="win-maximize" title="Maximize">
+              <svg viewBox="0 0 10 10"><path fill="none" stroke="currentColor" stroke-width="1" d="M1,1 L9,1 L9,9 L1,9 Z"/></svg>
+            </button>
+            <button class="control-btn close" id="win-close" title="Close">
+              <svg viewBox="0 0 10 10"><path fill="none" stroke="currentColor" stroke-width="1.2" d="M1,1 L9,9 M9,1 L1,9"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="smartphone-bezel">
+          <!-- Dynamic Notch/Punch hole -->
+          <div class="smartphone-camera-punch"></div>
+          <!-- Ear speaker -->
+          <div class="smartphone-speaker"></div>
+          
+          <!-- SCREEN CONTENT -->
+          <div class="smartphone-screen" id="phone-screen-container">
+            
+            <!-- DYNAMIC LAUNCHER TOP BAR -->
+            <div class="phone-status-bar" id="phone-status-bar" style="display: none;">
+              <div class="phone-status-time" id="screen-time">10:24</div>
+              <div class="phone-status-icons">
+                <!-- WiFi Icon -->
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20" stroke-linecap="round"></line></svg>
+                <!-- Battery Icon -->
+                <div class="battery-status-bar-icon">
+                  <span id="status-bar-battery-text">88%</span>
+                  <div class="battery-shell">
+                    <div class="battery-fill" id="status-bar-battery-fill" style="width: 88%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 1: QR PAIRING (Shown when disconnected) -->
+            <div class="screen-view active" id="view-pairing">
+              <div class="pairing-content">
+                <div class="pairing-qr-section">
+                  <!-- QR Wrapper -->
+                  <div class="qr-code-wrapper">
+                    <img id="qr-code-img" src="" alt="Pairing QR Code">
+                    <div class="qr-shimmer"></div>
+                  </div>
+                  <!-- Code info -->
+                  <div class="pairing-code-info">
+                    <span class="label">Code:</span>
+                    <span id="pc-peer-id">Generating...</span>
+                  </div>
+                </div>
+                <div class="pairing-text-section">
+                  <h2>Connect Device</h2>
+                  <p class="pairing-subtitle">Scan the QR code with your Android phone to establish complete secure control.</p>
+                  <div class="wi-fi-tip">
+                    <div class="tip-text">Note: Ensure your mobile is on the same local network or scan to route over PeerJS cloud securely.</div>
+                  </div>
+                  <div class="demo-launcher-box">
+                    <button class="btn btn-secondary btn-sm" id="btn-open-demo-mobile">
+                      Open Companion in Browser
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 2: LIVE STREAM (Shown in Live Mirror mode) -->
+            <div class="screen-view" id="view-live-mirror">
+              <div class="mirror-video-container">
+                <video id="mirror-video" autoplay playsinline></video>
+                <div class="mirror-overlay" id="mirror-touch-overlay"></div>
+                <div class="mirror-placeholder" id="mirror-placeholder">
+                  <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" class="pulse-icon"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <p>Awaiting Live Stream from Phone</p>
+                  <span>Tap "Start Screen Stream" in the companion web app.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 3: SIMULATED ANDROID LAUNCHER (When connected & not sharing raw stream) -->
+            <div class="screen-view" id="view-virtual-launcher">
+              <div class="android-launcher">
+                <div class="launcher-left-column">
+                  <div class="launcher-widgets">
+                    <div class="widget-clock">
+                      <span id="launcher-clock-time">10:24</span>
+                      <span id="launcher-clock-ampm">AM</span>
+                    </div>
+                    <div class="widget-date" id="launcher-clock-date">Monday, May 25</div>
+                    
+                    <div class="widget-glass-info">
+                      <div class="widget-pill">
+                        <span class="widget-pill-dot green"></span>
+                        <span>Synced P2P</span>
+                      </div>
+                      <div class="widget-pill">
+                        <span>BAT <span id="launcher-battery-text">88%</span></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="google-search-bar">
+                    <span class="g-logo">G</span>
+                    <div class="g-mic">
+                      <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="launcher-right-column">
+                  <div class="launcher-app-grid">
+                    <button class="launcher-app" data-target="dashboard" title="Dashboard">
+                      <div class="app-icon gradient-blue">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                      </div>
+                      <span>Launcher</span>
+                    </button>
+                    <button class="launcher-app" data-target="mirror" title="Live Mirror">
+                      <div class="app-icon gradient-purple">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                      </div>
+                      <span>Mirror</span>
+                    </button>
+                    <button class="launcher-app" data-target="camera" title="Camera">
+                      <div class="app-icon gradient-red">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                      </div>
+                      <span>Camera</span>
+                    </button>
+                    <button class="launcher-app" data-target="gallery" title="Gallery">
+                      <div class="app-icon gradient-green">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      </div>
+                      <span>Gallery</span>
+                    </button>
+                    <button class="launcher-app" data-target="messages" title="Messages">
+                      <div class="app-icon gradient-indigo">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                      </div>
+                      <span>SMS</span>
+                    </button>
+                    <button class="launcher-app" data-target="settings" title="Settings">
+                      <div class="app-icon gradient-dark">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.5 1z"></path></svg>
+                      </div>
+                      <span>Settings</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Home Button Bar inside Bezel (Modern Gesture Navigation) -->
+            <div class="phone-home-indicator" id="phone-nav-bar" style="display: none;">
+              <div class="gesture-pill" id="phone-home-btn" title="Home Launcher"></div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: COMPONENT VIEWS (Dashboard control widgets) -->
+      <div class="dashboard-panel">
+        
+        <!-- MODULE A: DASHBOARD STATUS (Default View) -->
+        <div class="tab-module active" id="module-dashboard">
+          <div class="module-header">
+            <h1>Device Dashboard</h1>
+            <p>Real-time system diagnostics and telemetry from your phone.</p>
+          </div>
+
+          <!-- Network & Basic Card -->
+          <div class="diag-hero-card">
+            <div class="connection-pill inline">
+              <span class="pulse-dot green" id="hero-status-dot"></span>
+              <span id="hero-connection-status">Connected</span>
+            </div>
+            <div class="diag-hero-main">
+              <div class="device-name-display">
+                <span class="device-brand">Android Device</span>
+                <span class="device-sub" id="connected-peer-sub">ID: ...</span>
+              </div>
+              <div class="latency-pill">
+                <span>P2P Direct</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid Gauges -->
+          <div class="metrics-grid">
+            <!-- Battery Metric -->
+            <div class="metric-card glass">
+              <div class="card-title">
+                <span>Power Status</span>
+                <span class="badge green" id="battery-status-badge">Synced</span>
+              </div>
+              <div class="battery-circular-progress">
+                <svg viewBox="0 0 100 100" class="circular-svg">
+                  <circle cx="50" cy="50" r="40" class="bg-circle" />
+                  <circle cx="50" cy="50" r="40" class="progress-circle" id="battery-progress-ring" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                </svg>
+                <div class="battery-percentage-overlay">
+                  <span id="battery-percentage-value">--%</span>
+                  <span id="battery-temp">Active</span>
+                </div>
+              </div>
+              <div class="battery-meta">
+                <span id="battery-charging-text">Discharging</span>
+                <span id="battery-voltage">3.9 V</span>
+              </div>
+            </div>
+
+            <!-- Storage & Diagnostics -->
+            <div class="metric-card glass">
+              <div class="card-title">
+                <span>Device Storage</span>
+                <span class="badge blue">64% Full</span>
+              </div>
+              
+              <div class="storage-metrics-bar">
+                <div class="progress-bar-horizontal">
+                  <div class="fill-bar blue" style="width: 64.2%;"></div>
+                </div>
+                <div class="storage-labels">
+                  <span>82.1 GB Used</span>
+                  <span>128 GB Total</span>
+                </div>
+              </div>
+
+              <div class="storage-breakdown">
+                <div class="breakdown-item">
+                  <div class="breakdown-icon purple-bg">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  </div>
+                  <span class="name">Photos & Videos</span>
+                  <span class="val">32.4 GB</span>
+                </div>
+                <div class="breakdown-item">
+                  <div class="breakdown-icon green-bg">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="12" y1="2" x2="12" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+                  </div>
+                  <span class="name">Apps & System</span>
+                  <span class="val">49.7 GB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notification Drawer -->
+          <div class="dashboard-section-header">
+            <h3>Recent Notifications</h3>
+            <button class="btn btn-text btn-sm" id="btn-clear-notifications">Clear All</button>
+          </div>
+          
+          <div class="notification-feed-container" id="dashboard-notification-feed">
+            <div class="empty-feed-placeholder">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <p>No new notifications</p>
+              <span>Incoming notifications from your phone will show here in real-time.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE B: LIVE MIRROR CONTROLS -->
+        <div class="tab-module" id="module-mirror">
+          <div class="module-header">
+            <h1>Live Mirror View</h1>
+            <p>View and guide control of your mobile screen in real-time.</p>
+          </div>
+
+          <div class="info-alert">
+            <span class="alert-icon">ℹ️</span>
+            <p class="alert-text">To mirror, click <strong>Start Screen Stream</strong> inside the mobile companion app and approve the OS cast dialogue.</p>
+          </div>
+
+          <div class="controls-panel-row">
+            <button class="btn btn-primary" id="btn-request-mirror">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" style="margin-right:8px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Establish Screen Connection
+            </button>
+            <button class="btn btn-secondary" id="btn-stop-mirror" disabled>
+              Stop Mirroring
+            </button>
+          </div>
+
+          <div class="mirror-features-grid">
+            <div class="feature-card">
+              <h4>Direct Remote Guidance</h4>
+              <p>Click on the mirror view on the left. The coordinate clicks are transmitted back over WebRTC to the companion app, showing a pointer tap dot to guide phone users in real-time.</p>
+              <div class="toggle-control">
+                <span>Display Touch Indicator</span>
+                <label class="switch">
+                  <input type="checkbox" id="chk-touch-indicator" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="feature-card">
+              <h4>Stream Resolution</h4>
+              <p>Configure screen cast quality bandwidth. High resolution is recommended for Wi-Fi, Standard for cellular networks.</p>
+              <div class="select-wrapper">
+                <select id="mirror-quality">
+                  <option value="1080p">High Definition (1080p, 60fps)</option>
+                  <option value="720p" selected>Standard (720p, 30fps)</option>
+                  <option value="480p">Low Bandwidth (480p, 24fps)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE C: REMOTE CAMERA -->
+        <div class="tab-module" id="module-camera">
+          <div class="module-header">
+            <h1>Remote Camera</h1>
+            <p>Stream and capture media from your Android's front and back camera lenses.</p>
+          </div>
+
+          <div class="camera-workspace-split">
+            <!-- Control bar -->
+            <div class="camera-options-bar">
+              <div class="control-group">
+                <label>Select Camera Source</label>
+                <div class="select-wrapper">
+                  <select id="camera-lens-select">
+                    <option value="environment" selected>Rear Camera (Back Lens)</option>
+                    <option value="user">Front Camera (Selfie Lens)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <label>Live Filters</label>
+                <div class="filter-pills">
+                  <button class="filter-pill active" data-filter="none">Normal</button>
+                  <button class="filter-pill" data-filter="grayscale">Mono</button>
+                  <button class="filter-pill" data-filter="sepia">Vintage</button>
+                  <button class="filter-pill" data-filter="hue">Cyber</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Video wrapper -->
+            <div class="pc-camera-view-container">
+              <video id="camera-stream-video" autoplay playsinline></video>
+              <div class="camera-stream-placeholder" id="camera-stream-placeholder">
+                <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <p>Camera Stream Disconnected</p>
+                <span>Select a lens and click "Start Camera Feed" in the companion web app.</span>
+              </div>
+            </div>
+
+            <div class="camera-trigger-row">
+              <button class="btn btn-primary" id="btn-camera-snapshot">
+                Take Snapshot
+              </button>
+              <button class="btn btn-secondary" id="btn-toggle-camera-grid">
+                Grid Lines
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE D: GALLERY BROWSER -->
+        <div class="tab-module" id="module-gallery">
+          <div class="module-header-row">
+            <div class="module-header">
+              <h1>Synced Media Gallery</h1>
+              <p>Browse and save photos sent directly from your mobile device.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-sync-gallery-prompt">
+              Sync Photos
+            </button>
+          </div>
+
+          <div class="gallery-container">
+            <div class="gallery-empty-placeholder" id="gallery-empty">
+              <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              <p>No photos synced yet</p>
+              <span>Tap "Sync Photos" in the mobile web app and upload pictures to see them instantly in your gallery.</span>
+            </div>
+            
+            <div class="gallery-grid" id="desktop-gallery-grid" style="display: none;">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE E: SMS MESSAGES -->
+        <div class="tab-module" id="module-messages">
+          <div class="module-header">
+            <h1>Messaging Hub</h1>
+            <p>Read conversation threads and reply directly from your keyboard.</p>
+          </div>
+
+          <div class="chat-hub-container">
+            <!-- Sidebar with chats -->
+            <div class="chat-threads-sidebar">
+              <div class="thread-search">
+                <input type="text" placeholder="Search conversations..." id="thread-search-input">
+              </div>
+              <div class="threads-list" id="chat-threads-list">
+                <div class="thread-item active" data-contact="Alexa">
+                  <div class="avatar gradient-blue">A</div>
+                  <div class="thread-info">
+                    <div class="thread-meta">
+                      <span class="contact-name">Alexa (Mobile Sync)</span>
+                      <span class="time">Just Now</span>
+                    </div>
+                    <p class="preview-text">Are you reviewing my project from your PC?</p>
+                  </div>
+                </div>
+                <div class="thread-item" data-contact="Mark">
+                  <div class="avatar gradient-purple">M</div>
+                  <div class="thread-info">
+                    <div class="thread-meta">
+                      <span class="contact-name">Mark Benson</span>
+                      <span class="time">1h ago</span>
+                    </div>
+                    <p class="preview-text">Hey! That new Electron remote dashboard looks awesome.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active chat pane -->
+            <div class="chat-message-pane">
+              <div class="chat-pane-header">
+                <div class="active-contact">
+                  <div class="avatar gradient-blue" id="active-chat-avatar">A</div>
+                  <div class="contact-details">
+                    <span class="active-name" id="active-chat-name">Alexa (Mobile Sync)</span>
+                    <span class="subtext">Active Now (Direct WebRTC Link)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message list -->
+              <div class="message-history" id="chat-messages-container">
+                <div class="msg-bubble received">
+                  <p>Hey! I scanned the QR code. We are fully connected now!</p>
+                  <span class="time">10:22 AM</span>
+                </div>
+                <div class="msg-bubble sent">
+                  <p>Awesome! I can see your diagnostics, battery status, and stream the screen perfectly.</p>
+                  <span class="time">10:23 AM</span>
+                </div>
+                <div class="msg-bubble received">
+                  <p>Are you reviewing my project from your PC?</p>
+                  <span class="time">10:24 AM</span>
+                </div>
+              </div>
+
+              <!-- Message Composer -->
+              <div class="message-composer">
+                <input type="text" id="chat-message-input" placeholder="Type a message to send to phone...">
+                <button class="btn btn-primary" id="btn-send-message">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE F: SETTINGS -->
+        <div class="tab-module" id="module-settings">
+          <div class="module-header">
+            <h1>Application Settings</h1>
+            <p>Customize and manage the desktop receiver configuration.</p>
+          </div>
+
+          <div class="settings-sections">
+            <div class="settings-card glass">
+              <h3>General Preferences</h3>
+              <div class="setting-row">
+                <div class="setting-desc">
+                  <span class="name">Start with System</span>
+                  <span class="detail">Launch Electron automatically when starting the PC.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-desc">
+                  <span class="name">Minimize to System Tray</span>
+                  <span class="detail">Keep the application running in the background when closed.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-card glass">
+              <h3>Connection & Security</h3>
+              <div class="setting-row">
+                <div class="setting-desc">
+                  <span class="name">PeerJS Signaling Server Host</span>
+                  <span class="detail">Uses PeerJS official cloud broker. Change for self-hosted instances.</span>
+                </div>
+                <input type="text" value="0.peerjs.com" disabled class="settings-input">
+              </div>
+              <div class="setting-row">
+                <div class="setting-desc">
+                  <span class="name">Auto-Accept Device Syncing</span>
+                  <span class="detail">Allow synced devices to automatically pair without prompt.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-card glass">
+              <h3>Launcher Interface Theme</h3>
+              <p style="font-size: 13px; color:#A0AEC0; margin-bottom: 12px;">Choose wallpaper for the simulated smartphone home screen view.</p>
+              <div class="wallpaper-selector">
+                <div class="wp-pill active" data-wp="wp-neon">Neon Sunset</div>
+                <div class="wp-pill" data-wp="wp-dark">Liquid Obsidian</div>
+                <div class="wp-pill" data-wp="wp-glass">Aurora Glass</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      
+    </section>
+
+  </main>
+
+  <!-- Photo Fullscreen Modal Viewer -->
+  <div class="fullscreen-modal" id="photo-lightbox" style="display: none;">
+    <button class="lightbox-close" id="btn-lightbox-close">&times;</button>
+    <div class="lightbox-content">
+      <img src="" id="lightbox-img" alt="Enlarged photo">
+      <div class="lightbox-actions">
+        <a href="" id="btn-lightbox-download" download class="btn btn-primary">Save Image to PC</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
