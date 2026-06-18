@@ -57,8 +57,51 @@ document.addEventListener('DOMContentLoaded', () => {
   let pendingStream = null;
   let html5QrCodeInstance = null;
 
+  // Dynamic host/port connection parameters
+  let peerHost = window.location.hostname;
+  let peerPort = window.location.port || (window.location.protocol === 'https:' ? 443 : 80);
+
+  function parseConnectionDetails(input) {
+    let parsedPeerId = input;
+    
+    // Check if input is a URL or has host info
+    try {
+      if (input.startsWith('http://') || input.startsWith('https://')) {
+        const url = new URL(input);
+        peerHost = url.hostname;
+        peerPort = url.port || (url.protocol === 'https:' ? 443 : 80);
+        const queryPeerId = url.searchParams.get('peerId');
+        if (queryPeerId) {
+          parsedPeerId = queryPeerId;
+        }
+      } else if (input.includes(':') || input.includes('/')) {
+        // e.g. 192.168.1.15:5500/electron-pc-xxxxxx
+        const parts = input.split('/');
+        const hostPortPart = parts[0];
+        const peerIdPart = parts.slice(1).join('/');
+        
+        if (hostPortPart.includes(':')) {
+          const hp = hostPortPart.split(':');
+          peerHost = hp[0];
+          peerPort = hp[1];
+        } else {
+          peerHost = hostPortPart;
+          peerPort = 80;
+        }
+        if (peerIdPart) {
+          parsedPeerId = peerIdPart;
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing connection details, using raw input:', e);
+    }
+    
+    console.log(`Parsed Connection: Host=${peerHost}, Port=${peerPort}, PeerID=${parsedPeerId}`);
+    return parsedPeerId;
+  }
+
   function showConnectionPrompt(peerId) {
-    targetPeerId = peerId;
+    targetPeerId = parseConnectionDetails(peerId);
     pairTargetIdLabel.textContent = targetPeerId;
     connectModal.style.display = 'flex';
   }
@@ -83,10 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function initMobilePeer() {
     const mobilePeerId = 'electron-mob-' + Math.random().toString(36).substring(2, 8);
     
+    console.log(`Initializing PeerJS Mobile Client to signaling broker at: ${peerHost}:${peerPort}/peerjs`);
+    
     // Connect to local signaling server on the same host/port as Express
     peer = new Peer(mobilePeerId, {
-      host: window.location.hostname,
-      port: window.location.port || 80,
+      host: peerHost,
+      port: peerPort,
       path: '/peerjs',
       debug: 1
     });

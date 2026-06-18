@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Electron Mobile</string>
+    <string name="title_activity_main">Electron Mobile</string>
+    <string name="package_name">com.electron.mobile</string>
+    <string name="custom_url_scheme">com.electron.mobile</string>
+</resources>

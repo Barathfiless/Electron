@@ -1,0 +1,8 @@
+{
+  "appId": "com.electron.mobile",
+  "appName": "Electron Mobile",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
