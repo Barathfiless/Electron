@@ -781,16 +781,9 @@ document.addEventListener('DOMContentLoaded', () => {
             qrScannerContainer.style.display = 'none';
             viewLanding.style.display = 'none';
 
-            // Extract peerId from QR URL
-            let scannedId = decodedText;
-            if (decodedText.includes('peerId=')) {
-              const urlMatch = decodedText.match(/peerId=([^&]+)/);
-              if (urlMatch) {
-                scannedId = urlMatch[1];
-              }
-            }
-            
-            showConnectionPrompt(scannedId);
+            // Pass the entire scanned QR URL to showConnectionPrompt
+            // to allow dynamically parsing the PC's IP and Port
+            showConnectionPrompt(decodedText);
           }).catch((err) => {
             console.error("Failed to clean up scanner:", err);
             qrScannerContainer.style.display = 'none';
